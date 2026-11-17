@@ -1,0 +1,6 @@
+:root{--bg:#0d1117;--fg:#e6edf3;--mut:#9aa4b2;--acc:#ffd23c}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:720px;margin:0 auto;padding:32px 16px}
+h1{font-size:28px;margin:0 0 8px} h2{font-size:20px;margin-top:28px}
+a{color:var(--acc)} .mut{color:var(--mut)} .card{display:block;padding:16px;border:1px solid #30363d;border-radius:12px;margin:12px 0;text-decoration:none;color:var(--fg)}
+footer{margin-top:40px;font-size:14px;color:var(--mut)}
