@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HQ Studios Publisher</title><link rel="stylesheet" href="../style.css">
+<style>
+.row{display:flex;gap:16px;align-items:center}.btn{background:#fe2c55;color:#fff;border:0;border-radius:8px;padding:12px 18px;font-weight:700;font-size:16px;cursor:pointer}
+.btn[disabled]{opacity:.4;cursor:not-allowed}.box{border:1px solid #30363d;border-radius:12px;padding:16px;margin:14px 0}
+label{display:block;margin:6px 0}select,input[type=text],textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #30363d;background:#161b22;color:#e6edf3;font-size:15px}
+video{width:220px;border-radius:10px;background:#000}.avatar{width:48px;height:48px;border-radius:50%}.ok{color:#3fb950}.err{color:#f85149}.hide{display:none}
+</style></head><body><main>
+<h1>HQ Studios Publisher</h1>
+<p class="mut">Publish our own short videos to TikTok.</p>
+
+<div id="login" class="box">
+  <p>Step 1 — Connect the TikTok account you want to post to.</p>
+  <button class="btn" id="connect">Continue with TikTok</button>
+</div>
+
+<div id="app" class="hide">
+  <div class="box row" id="creator"><img class="avatar" id="avatar" alt=""><div><b id="nick"></b><div class="mut" id="uname"></div></div></div>
+
+  <div class="box">
+    <p><b>Step 2 — Choose a video</b></p>
+    <select id="video"></select>
+    <div class="row" style="margin-top:12px"><video id="preview" controls muted playsinline></video>
+      <div style="flex:1"><label>Caption<textarea id="title" rows="4" maxlength="2200"></textarea></label></div></div>
+  </div>
+
+  <div class="box">
+    <p><b>Step 3 — Post settings</b></p>
+    <label>Who can view this video
+      <select id="privacy"><option value="" selected disabled>Select privacy</option></select></label>
+    <p class="mut" style="margin:10px 0 4px">Allow users to</p>
+    <label><input type="checkbox" id="comment"> Comment</label>
+    <label><input type="checkbox" id="duet"> Duet</label>
+    <label><input type="checkbox" id="stitch"> Stitch</label>
+    <hr style="border-color:#30363d">
+    <label><input type="checkbox" id="disclose"> Disclose video content (promotes a brand, product or service)</label>
+    <div id="discloseOpts" class="hide" style="margin-left:20px">
+      <label><input type="checkbox" id="yourbrand"> Your brand — you are promoting yourself or your own business</label>
+      <label><input type="checkbox" id="branded"> Branded content — you are promoting another brand or a third party</label>
+      <p class="mut" id="discloseHint"></p>
+    </div>
+  </div>
+
+  <p class="mut" id="declaration">By posting, you agree to TikTok's <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank">Music Usage Confirmation</a>.</p>
+  <button class="btn" id="post" disabled>Post to TikTok</button>
+  <p id="status"></p>
+</div>
+<footer><a href="../privacy.html">Privacy Policy</a> · <a href="../terms.html">Terms of Service</a></footer>
+</main>
+<script>
+const B='http://localhost:8791', CK='sbawo4omk7rkqkk1f5', R='https://hqstudiosmedia.github.io/tiktok/callback.html';
+const $=id=>document.getElementById(id); let info=null;
+$('connect').onclick=()=>{const st=Math.random().toString(36).slice(2);sessionStorage.st=st;
+ location.href='https://www.tiktok.com/v2/auth/authorize/?client_key='+CK+'&scope=user.info.basic,video.publish,video.upload&response_type=code&redirect_uri='+encodeURIComponent(R)+'&state='+st;};
+async function j(p,o){const r=await fetch(B+p,o);return r.json();}
+function check(){const p=$('privacy').value, d=$('disclose').checked, any=$('yourbrand').checked||$('branded').checked;
+ $('post').disabled=!p||(d&&!any)||!$('video').value;
+ const b=$('branded').checked, y=$('yourbrand').checked;
+ $('discloseHint').textContent=b?'Your video will be labeled as "Paid partnership".':(y?'Your video will be labeled as "Promotional content".':'');
+ $('declaration').innerHTML=b?"By posting, you agree to TikTok's <a target=_blank href='https://www.tiktok.com/legal/page/global/bc-policy/en'>Branded Content Policy</a> and <a target=_blank href='https://www.tiktok.com/legal/page/global/music-usage-confirmation/en'>Music Usage Confirmation</a>.":"By posting, you agree to TikTok's <a target=_blank href='https://www.tiktok.com/legal/page/global/music-usage-confirmation/en'>Music Usage Confirmation</a>.";
+ [...$('privacy').options].forEach(o=>{if(o.value==='SELF_ONLY')o.disabled=b;});}
+async function load(){
+ let s; try{s=await j('/status');}catch(e){return;}
+ if(!s.connected) return;
+ $('login').classList.add('hide'); $('app').classList.remove('hide');
+ info=(await j('/creator_info')).data||{};
+ $('avatar').src=info.creator_avatar_url||''; $('nick').textContent=info.creator_nickname||''; $('uname').textContent='@'+(info.creator_username||'');
+ (info.privacy_level_options||[]).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent={PUBLIC_TO_EVERYONE:'Everyone',MUTUAL_FOLLOW_FRIENDS:'Friends',FOLLOWER_OF_CREATOR:'Followers',SELF_ONLY:'Only me'}[v]||v;$('privacy').appendChild(o);});
+ ['comment','duet','stitch'].forEach(k=>{if(info[k+'_disabled']){$(k).disabled=true;$(k).parentElement.classList.add('mut');}});
+ const v=(await j('/videos')).videos||[]; v.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;$('video').appendChild(o);});
+ $('video').onchange=()=>{$('preview').src=B+'/video/'+encodeURIComponent($('video').value);check();}; $('video').onchange();
+ ['privacy','disclose','yourbrand','branded'].forEach(k=>$(k).onchange=()=>{$('discloseOpts').classList.toggle('hide',!$('disclose').checked);check();});
+ check();}
+$('post').onclick=async()=>{$('post').disabled=true;$('status').textContent='Uploading to TikTok…';
+ const r=await j('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video:$('video').value,title:$('title').value,privacy:$('privacy').value,
+  disable_comment:!$('comment').checked,disable_duet:!$('duet').checked,disable_stitch:!$('stitch').checked,brand_content:$('branded').checked,brand_organic:$('yourbrand').checked})});
+ $('status').className=r.error?'err':'ok';
+ $('status').textContent=r.error?('Error: '+JSON.stringify(r.error).slice(0,200)):('Posted! Status: '+(r.status||'')+'. It may take a few minutes for the post to appear on your profile.');};
+load();
+</script></body></html>
