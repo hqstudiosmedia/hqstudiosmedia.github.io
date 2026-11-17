@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connecting… · HQ Studios Publisher</title><link rel="stylesheet" href="../style.css"></head><body><main>
+<h1>Connecting your TikTok account…</h1><p id="s" class="mut">Please wait.</p></main>
+<script>
+const q=new URLSearchParams(location.search), code=q.get('code');
+if(!code){document.getElementById('s').textContent='Authorization was cancelled: '+(q.get('error_description')||q.get('error')||'');}
+else fetch('http://localhost:8791/exchange',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})})
+ .then(r=>r.json()).then(r=>{document.getElementById('s').textContent=r.ok?'Connected. Redirecting…':'Error: '+r.error; if(r.ok) setTimeout(()=>location.href='index.html',800);})
+ .catch(e=>document.getElementById('s').textContent='Backend not reachable.');
+</script></body></html>
